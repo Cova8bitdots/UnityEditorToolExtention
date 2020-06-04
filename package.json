@@ -1,0 +1,15 @@
+{
+  "name": "com.covatech.editortool-extention",
+  "displayName": "UnityEditorToolExtention",
+  "version": "0.1.0",
+  "unity": "2019.2",
+  "description": "Variable EditorTools for Unity",
+  "dependencies": {
+  },
+  "author": {
+    "name": "Cova 8bitdots",
+    "url": "https://github.com/Cova8bitdots"
+  },
+  "repository": "https://github.com/Cova8bitdots/UnityEditorToolExtention.git",
+  "license": "MIT"
+}
