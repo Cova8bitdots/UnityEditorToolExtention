@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace cova.EditorTool
+namespace CovaTech.EditorTool
 {
     /// <summary>
     /// Utility for Handles class
