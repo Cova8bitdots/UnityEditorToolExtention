@@ -8,4 +8,4 @@
 Use UnityPackageManager
 
 ## Install via git URL
-You can add `"https://github.com/Cova8bitdots/UnityEditorToolExtention.git?path=CovaTechLib"`
+You can add `https://github.com/Cova8bitdots/UnityEditorToolExtention.git?path=CovaTechLib`
