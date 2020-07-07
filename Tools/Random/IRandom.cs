@@ -1,4 +1,6 @@
-﻿namespace CovaTech.Lib
+﻿using System;
+
+namespace CovaTech.Lib
 {
     /// <summary>
     /// 乱数提供クラス向けインターフェース

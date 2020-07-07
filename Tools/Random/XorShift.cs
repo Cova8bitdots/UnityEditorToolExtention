@@ -1,4 +1,6 @@
-﻿namespace CovaTech.Lib
+﻿using System;
+
+namespace CovaTech.Lib
 {
     /// <summary>
     /// 128bit XorShift 提供クラス
