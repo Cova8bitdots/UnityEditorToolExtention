@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using System;
 
-namespace CovaTech.EditorTools
+namespace CovaTech.Lib
 {
     [AttributeUsage(AttributeTargets.Field)]
     public class EnumLabelAttribute : PropertyAttribute{

@@ -13,6 +13,7 @@ using UnityEditor;
 
 namespace CovaTech.EditorTools
 {
+    using CovaTech.Lib;
     [CustomPropertyDrawer(typeof(EnumLabelAttribute))]
     public class EnumLabelDrawer : PropertyDrawer {
 

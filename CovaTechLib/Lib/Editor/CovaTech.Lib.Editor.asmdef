@@ -1,0 +1,17 @@
+{
+    "name": "CovaTech.Lib.Editor",
+    "references": [
+        "GUID:5bccf2be3b111422e8b9b313eb6768a4"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
