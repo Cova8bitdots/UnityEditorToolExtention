@@ -7,6 +7,11 @@ using UnityEditor;
 [CustomEditor(typeof(Transform))]
 public class TransformEditor : Editor
 {
+    private const int VEC3_X_FLAG = 0x01;
+    private const int VEC3_Y_FLAG = 0x02;
+    private const int VEC3_Z_FLAG = 0x04;
+    private const int ALL_VEC3_FLAG = 0x07;
+    
     static readonly string LABEL_LOCAL_POS = "LocalPosition";
     static readonly string LABEL_WORLD_POS = "WorldPosition";
     static readonly string LABEL_LOCAL_ROT = "Rotation";
@@ -35,7 +40,10 @@ public class TransformEditor : Editor
     public override void OnInspectorGUI()
     {
         //base.OnInspectorGUI();
-
+        if( targets == null || targets.Length < 1)
+        {
+            return;
+        }
         Transform trans = target as Transform;
         if (trans == null)
         {
@@ -44,123 +52,109 @@ public class TransformEditor : Editor
         m_localPosition = trans.localPosition;
         m_localRotation = trans.localRotation;
         m_localScale = trans.localScale;
+
+        int changeFlag = 0;
         EditorGUI.BeginChangeCheck();
         {
-            DrawLocalPosition(ref m_localPosition);
-            DrawWorldPosition(trans);
-            DrawLocalRotation(ref m_localRotation);
-            DrawWorldRotation(trans);
-            DrawLocalScale(ref m_localScale);
-            DrawLossyScale(trans);
+            changeFlag = DrawVec3Field(ref m_localPosition, LABEL_LOCAL_POS);
+            DrawDisableVector3Field(trans.position, LABEL_WORLD_POS);
         }
         if( EditorGUI.EndChangeCheck() )
         {
-            EditorUtility.SetDirty(target);
-            Undo.RecordObject(target, "UpdateTransform");
-            trans.localPosition = m_localPosition;
-            trans.localRotation = m_localRotation;
-            trans.localScale = m_localScale;
+            foreach( var item in targets)
+            {
+                EditorUtility.SetDirty(item);
+                Transform tr = item as Transform;
+                Undo.RecordObject(target, "UpdatePosition");
+                Vector3 localPos = tr.localPosition;
+                localPos.x = (changeFlag & VEC3_X_FLAG) != 0 ? m_localPosition.x : localPos.x;
+                localPos.y = (changeFlag & VEC3_Y_FLAG) != 0 ? m_localPosition.y : localPos.y;
+                localPos.z = (changeFlag & VEC3_Z_FLAG) != 0 ? m_localPosition.z : localPos.z;
+                tr.localPosition = localPos;
+            }
         }
-
-    }
-
-    private void DrawLocalPosition(ref Vector3 _target)
-    {
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUILayout.LabelField(LABEL_LOCAL_POS, GUILayout.Width(LABEL_WIDTH));
-            bool isReset = GUILayout.Button(LABEL_RESET, GUILayout.Width(BUTTON_WIDTH));
-
             
-            _target = EditorGUILayout.Vector3Field("", _target);
-            if (isReset)
+        EditorGUI.BeginChangeCheck();
+        {
+            Vector3 angles = m_localRotation.eulerAngles;
+            changeFlag = DrawVec3Field(ref angles, LABEL_LOCAL_ROT);
+            m_localRotation.eulerAngles = angles;
+            DrawDisableVector3Field(trans.rotation.eulerAngles, LABEL_WORLD_ROT);
+        }
+        if( EditorGUI.EndChangeCheck() )
+        {
+            foreach( var item in targets)
             {
-                _target = Vector3.zero;
+                EditorUtility.SetDirty(item);
+                Transform tr = item as Transform;
+                Undo.RecordObject(target, "UpdateRotation");
+                tr.localRotation = m_localRotation;
             }
         }
-        EditorGUILayout.EndHorizontal();
+            
+        EditorGUI.BeginChangeCheck();
+        {
+            changeFlag = DrawVec3Field(ref m_localScale, LABEL_LOCAL_SCALE);
+            DrawDisableVector3Field(trans.lossyScale, LABEL_WORLD_SCALE);
+        }
+        if( EditorGUI.EndChangeCheck() )
+        {
+            foreach( var item in targets)
+            {
+                EditorUtility.SetDirty(item);
+                Transform tr = item as Transform;
+                Undo.RecordObject(target, "UpdatePosition");
+                Vector3 localScale = tr.localScale;
+                localScale.x = (changeFlag & VEC3_X_FLAG) != 0 ? m_localScale.x : localScale.x;
+                localScale.y = (changeFlag & VEC3_Y_FLAG) != 0 ? m_localScale.y : localScale.y;
+                localScale.z = (changeFlag & VEC3_Z_FLAG) != 0 ? m_localScale.z : localScale.z;
+                tr.localScale = localScale;
+            }
+        }
     }
-
     /// <summary>
-    /// World座標系の位置を表示
+    /// Draw Vector3 Field
     /// </summary>
-    /// <param name="_target"></param>
-    private void DrawWorldPosition(Transform _target)
+    /// <param name="_vec"></param>
+    /// <param name="_label"></param>
+    /// <returns>BitField which shows where modified</returns>
+    private int DrawVec3Field( ref Vector3 _vec, string _label)
     {
-        EditorGUILayout.BeginHorizontal();
+        int ret = 0;
+        using( new EditorGUILayout.HorizontalScope() )
         {
-            //EditorGUILayout.BeginToggleGroup(LABEL_WORLD_POS, false);
-            EditorGUI.BeginDisabledGroup(true);
-            {
-                EditorGUILayout.LabelField(LABEL_WORLD_POS, GUILayout.Width(LABEL_WIDTH + BUTTON_WIDTH));
-                EditorGUILayout.Vector3Field("", _target.position);
-            }
-            EditorGUI.EndDisabledGroup();
-            //EditorGUILayout.EndToggleGroup();
-        }
-        EditorGUILayout.EndHorizontal();
-    }
-    private void DrawLocalRotation(ref Quaternion _target)
-    {
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUILayout.LabelField(LABEL_LOCAL_ROT, GUILayout.Width(LABEL_WIDTH));
+            EditorGUILayout.LabelField(_label, GUILayout.Width(LABEL_WIDTH));
             bool isReset = GUILayout.Button(LABEL_RESET, GUILayout.Width(BUTTON_WIDTH));
-            Vector3 newAngle = EditorGUILayout.Vector3Field("", _target.eulerAngles);
+            Vector3 newValue = EditorGUILayout.Vector3Field("", _vec);
+
+            ret |= newValue.x != _vec.x ? VEC3_X_FLAG : 0;
+            ret |= newValue.y != _vec.y ? VEC3_Y_FLAG : 0;
+            ret |= newValue.z != _vec.z ? VEC3_Z_FLAG : 0;
+            _vec = newValue;
             if (isReset)
             {
-                newAngle = Vector3.zero;
+                _vec = Vector3.zero;
+                ret |= ALL_VEC3_FLAG;
             }
-            _target = Quaternion.Euler(newAngle);
         }
-        EditorGUILayout.EndHorizontal();
+        return ret;
     }
 
     /// <summary>
-    /// ワールド座標系での回転角を表示
+    /// 表示のみのVector3フィールド
     /// </summary>
     /// <param name="_target"></param>
-    private void DrawWorldRotation(Transform _target)
+    /// <param name="_label"></param>
+    private void DrawDisableVector3Field(Vector3 _target, string _label)
     {
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUI.BeginDisabledGroup(true);
-            {
-                EditorGUILayout.LabelField(LABEL_WORLD_ROT, GUILayout.Width(LABEL_WIDTH + BUTTON_WIDTH));
-                EditorGUILayout.Vector3Field("", _target.rotation.eulerAngles);
-            }
-            EditorGUI.EndDisabledGroup();
-        }
-        EditorGUILayout.EndHorizontal();
-    }
-    private void DrawLocalScale(ref Vector3 _target)
-    {
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUILayout.LabelField(LABEL_LOCAL_SCALE, GUILayout.Width(LABEL_WIDTH));
-            bool isReset = GUILayout.Button(LABEL_RESET, GUILayout.Width(BUTTON_WIDTH));
-            _target = EditorGUILayout.Vector3Field("", _target);
-            if (isReset)
-            {
-                _target = Vector3.one;
-            }
-        }
-        EditorGUILayout.EndHorizontal();
-    }
-
-    /// <summary>
-    /// ワールド座標系でのScaleを表示
-    /// </summary>
-    /// <param name="_target"></param>
-    private void DrawLossyScale(Transform _target)
-    {
-        using( new EditorGUILayout.HorizontalScope())
+        using( new EditorGUILayout.HorizontalScope() )
         {
             using( new EditorGUI.DisabledGroupScope(true))
             {
-                EditorGUILayout.LabelField(LABEL_WORLD_SCALE, GUILayout.Width(LABEL_WIDTH + BUTTON_WIDTH));
-                EditorGUILayout.Vector3Field("", _target.lossyScale);
+                EditorGUILayout.LabelField(_label, GUILayout.Width(LABEL_WIDTH + BUTTON_WIDTH));
+                EditorGUILayout.Vector3Field("", _target);
             }
         }
     }
+
 }
