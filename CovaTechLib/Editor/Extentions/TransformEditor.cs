@@ -22,93 +22,86 @@ public class TransformEditor : Editor
 
     const float LABEL_WIDTH = 150f;
     const float BUTTON_WIDTH = 20f;
-    Vector3 m_localPosition = Vector3.zero;
+
     Quaternion m_localRotation = Quaternion.identity;
-    Vector3 m_localScale = Vector3.one;
+
+    private Editor m_editor = null;
+    private Transform m_trans = null;
+
+    private SerializedProperty positionProperty;
+    private SerializedProperty rotationProperty;
+    private SerializedProperty scaleProperty;
 
     private void OnEnable()
     {
-        Transform trans = target as Transform;
-        if(trans == null)
-        {
-            return;
-        }
-        m_localPosition = trans.localPosition;
-        m_localRotation = trans.localRotation;
-        m_localScale = trans.localScale;
+        var type = typeof(EditorApplication).Assembly.GetType("UnityEditor.TransformInspector");
+        m_editor = CreateEditor(targets, type);
+        m_trans = target as Transform;
+
+        m_localRotation = m_trans.localRotation;
+
+        this.positionProperty = this.serializedObject.FindProperty("m_LocalPosition");
+        this.rotationProperty = this.serializedObject.FindProperty("m_LocalRotation");
+        this.scaleProperty    = this.serializedObject.FindProperty("m_LocalScale");
     }
+    private void OnDisable()
+    {
+        DestroyImmediate(m_editor);
+        m_editor = null;
+    }
+
     public override void OnInspectorGUI()
     {
-        //base.OnInspectorGUI();
-        if( targets == null || targets.Length < 1)
-        {
-            return;
-        }
-        Transform trans = target as Transform;
-        if (trans == null)
-        {
-            return;
-        }
-        m_localPosition = trans.localPosition;
-        m_localRotation = trans.localRotation;
-        m_localScale = trans.localScale;
+        m_localRotation = m_trans.localRotation;
+
+        this.serializedObject.Update();
+
+        // Position
+        DrawVec3PropertyField(this.positionProperty, LABEL_LOCAL_POS);            
+        DrawDisableVector3Field(m_trans.position, LABEL_WORLD_POS);
 
         int changeFlag = 0;
-        EditorGUI.BeginChangeCheck();
+        if( targets.Length > 1 )
         {
-            changeFlag = DrawVec3Field(ref m_localPosition, LABEL_LOCAL_POS);
-            DrawDisableVector3Field(trans.position, LABEL_WORLD_POS);
+            EditorGUI.showMixedValue = true;
         }
-        if( EditorGUI.EndChangeCheck() )
-        {
-            foreach( var item in targets)
-            {
-                EditorUtility.SetDirty(item);
-                Transform tr = item as Transform;
-                Undo.RecordObject(target, "UpdatePosition");
-                Vector3 localPos = tr.localPosition;
-                localPos.x = (changeFlag & VEC3_X_FLAG) != 0 ? m_localPosition.x : localPos.x;
-                localPos.y = (changeFlag & VEC3_Y_FLAG) != 0 ? m_localPosition.y : localPos.y;
-                localPos.z = (changeFlag & VEC3_Z_FLAG) != 0 ? m_localPosition.z : localPos.z;
-                tr.localPosition = localPos;
-            }
-        }
-            
         EditorGUI.BeginChangeCheck();
         {
             Vector3 angles = m_localRotation.eulerAngles;
             changeFlag = DrawVec3Field(ref angles, LABEL_LOCAL_ROT);
             m_localRotation.eulerAngles = angles;
-            DrawDisableVector3Field(trans.rotation.eulerAngles, LABEL_WORLD_ROT);
+            DrawDisableVector3Field(m_trans.rotation.eulerAngles, LABEL_WORLD_ROT);
         }
         if( EditorGUI.EndChangeCheck() )
         {
+            Undo.RecordObjects(targets, "UpdateRotation");
             foreach( var item in targets)
             {
                 EditorUtility.SetDirty(item);
                 Transform tr = item as Transform;
-                Undo.RecordObject(target, "UpdateRotation");
                 tr.localRotation = m_localRotation;
             }
         }
-            
-        EditorGUI.BeginChangeCheck();
+        EditorGUI.showMixedValue = false;
+
+        // Scale
+        DrawVec3PropertyField(this.scaleProperty, LABEL_LOCAL_SCALE);            
+        DrawDisableVector3Field(m_trans.lossyScale, LABEL_WORLD_SCALE);
+
+        this.serializedObject.ApplyModifiedProperties();
+    }
+
+    private void DrawVec3PropertyField( SerializedProperty _property, string _label)
+    {
+        using( new EditorGUILayout.HorizontalScope() )
         {
-            changeFlag = DrawVec3Field(ref m_localScale, LABEL_LOCAL_SCALE);
-            DrawDisableVector3Field(trans.lossyScale, LABEL_WORLD_SCALE);
-        }
-        if( EditorGUI.EndChangeCheck() )
-        {
-            foreach( var item in targets)
+            EditorGUILayout.LabelField(_label, GUILayout.Width(LABEL_WIDTH));
+            bool isReset = GUILayout.Button(LABEL_RESET, GUILayout.Width(BUTTON_WIDTH));
+            EditorGUILayout.PropertyField(_property, GUIContent.none);
+
+            if (isReset)
             {
-                EditorUtility.SetDirty(item);
-                Transform tr = item as Transform;
-                Undo.RecordObject(target, "UpdatePosition");
-                Vector3 localScale = tr.localScale;
-                localScale.x = (changeFlag & VEC3_X_FLAG) != 0 ? m_localScale.x : localScale.x;
-                localScale.y = (changeFlag & VEC3_Y_FLAG) != 0 ? m_localScale.y : localScale.y;
-                localScale.z = (changeFlag & VEC3_Z_FLAG) != 0 ? m_localScale.z : localScale.z;
-                tr.localScale = localScale;
+                _property.vector3Value = Vector3.zero;
             }
         }
     }
