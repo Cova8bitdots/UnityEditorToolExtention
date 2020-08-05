@@ -1,6 +1,6 @@
 {
   "name": "dev.covatech.editortool-extention",
-  "displayName": "UnityEditorToolExtention",
+  "displayName": "CovaTech.UnityEditorToolExtention",
   "version": "0.1.2",
   "unity": "2019.4",
   "description": "Variable EditorTools for Unity",
