@@ -1,0 +1,30 @@
+name: CovaTechUnityLib Publish
+
+# release tagを発行時にアップロード
+on:
+  release:
+    types: [created]
+
+jobs:
+  # アップロード処理の実施
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        packagePath:
+          - ./Assets/EditorToolExtention/CovaTechLib
+
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 12
+          registry-url: https://npm.pkg.github.com/
+      - run: npm publish ${{ matrix.packagePath }}
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
