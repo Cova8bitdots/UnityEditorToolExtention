@@ -1,7 +1,11 @@
 name: CovaTechUnityLib Publish
 
-# release tagを発行時にアップロード
 on:
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches:    
+      - master
+  # release tagを発行時にアップロード
   release:
     types: [created]
 
@@ -13,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         packagePath:
-          - ./Assets/EditorToolExtention/CovaTechLib
+          - ./CovaTechLib
 
     permissions:
       packages: write
