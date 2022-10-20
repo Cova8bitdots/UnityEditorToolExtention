@@ -1,7 +1,7 @@
 {
   "name": "dev.covatech.editortool-extention",
   "displayName": "CovaTech.UnityEditorToolExtention",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "unity": "2021.3",
   "description": "Variable EditorTools for Unity",
   "dependencies": {
@@ -19,6 +19,6 @@
       "url": "https://github.com/Cova8bitdots/UnityEditorToolExtention/issues"
   },
   "publishConfig": {
-      "registry": "https://npm.pkg.github.com/@Cova8bitdots"
+      "registry": "https://npm.pkg.github.com/@cova8bitdots"
   }
 }
